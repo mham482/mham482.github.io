@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Ular</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #282c34;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 2px solid white;
+            background-color: black;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>Game Ular</h1>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <p>Skor: <span id="score">0</span></p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
+
+        const gridSize = 20;
+        let snake = [{ x: 200, y: 200 }];
+        let direction = { x: 0, y: 0 };
+        let food = { x: getRandomPosition(), y: getRandomPosition() };
+        let score = 0;
+        let speed = 200;
+
+        function getRandomPosition() {
+            return Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
+        }
+
+        function drawRect(x, y, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, gridSize, gridSize);
+        }
+
+        function drawSnake() {
+            snake.forEach((segment) => drawRect(segment.x, segment.y, "lime"));
+        }
+
+        function drawFood() {
+            drawRect(food.x, food.y, "red");
+        }
+
+        function update() {
+            const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+
+            // Check collision with walls
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                resetGame();
+                return;
+            }
+
+            // Check collision with itself
+            if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                resetGame();
+                return;
+            }
+
+            snake.unshift(head);
+
+            // Check if the snake eats the food
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                scoreElement.textContent = score;
+                food = { x: getRandomPosition(), y: getRandomPosition() };
+
+                // Increase speed
+                if (speed > 50) {
+                    speed -= 10;
+                }
+            } else {
+                snake.pop(); // Remove the tail
+            }
+        }
+
+        function resetGame() {
+            alert(`Game Over! Skor Anda: ${score}`);
+            snake = [{ x: 200, y: 200 }];
+            direction = { x: 0, y: 0 };
+            food = { x: getRandomPosition(), y: getRandomPosition() };
+            score = 0;
+            scoreElement.textContent = score;
+            speed = 200;
+        }
+
+        function gameLoop() {
+            setTimeout(() => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawFood();
+                drawSnake();
+                update();
+                requestAnimationFrame(gameLoop);
+            }, speed);
+        }
+
+        document.addEventListener("keydown", (e) => {
+            switch (e.key) {
+                case "ArrowUp":
+                    if (direction.y === 0) direction = { x: 0, y: -gridSize };
+                    break;
+                case "ArrowDown":
+                    if (direction.y === 0) direction = { x: 0, y: gridSize };
+                    break;
+                case "ArrowLeft":
+                    if (direction.x === 0) direction = { x: -gridSize, y: 0 };
+                    break;
+                case "ArrowRight":
+                    if (direction.x === 0) direction = { x: gridSize, y: 0 };
+                    break;
+            }
+        });
+
+        gameLoop();
+    </script>
+</body>
+</html>
